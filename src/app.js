@@ -1,6 +1,16 @@
 const express = require('express');
+
 const { sayHello } = require('./lib/strings');
 const { add, subtract, multiply, divide, remainder } = require('./lib/numbers');
+const { negate, truthiness, isOdd, startsWith } = require('./lib/booleans');
+const {
+  getNthElement,
+  arrayToCSVString,
+  addToArray,
+  elementsStartingWithAVowel,
+  removeNthElement,
+  removeNthElement2,
+} = require('./lib/arrays');
 
 const app = express();
 app.use(express.json());
@@ -95,6 +105,100 @@ app.post('/numbers/remainder', (req, res) => {
     return res.status(400).json({ error: 'Parameters must be valid numbers.' });
   }
   return res.status(200).json({ result: remainder(a, b) });
+});
+
+app.post('/booleans/negate', (req, res) => {
+  const { value } = req.body;
+
+  if (typeof value !== 'boolean') {
+    return res.status(200).json({ result: true });
+  }
+  const result = !value;
+
+  return res.status(200).json({ result });
+});
+
+app.post('/booleans/truthiness', (req, res) => {
+  const { value } = req.body;
+
+  if (typeof value === 'string' && value !== '') {
+    return res.status(200).json({ result: true });
+  }
+
+  if (typeof value === 'number' && value !== 0) {
+    return res.status(200).json({ result: true });
+  }
+
+  return res.status(200).json({ result: false });
+});
+
+app.get('/booleans/is-odd/:number', (req, res) => {
+  const number = parseInt(req.params.number);
+
+  if (isNaN(number)) {
+    return res.status(400).json({ error: 'Parameter must be a number.' });
+  }
+
+  const isodd = number % 2 !== 0;
+
+  return res.status(200).json({ result: isodd });
+});
+
+app.get('/booleans/:string/starts-with/:character', (req, res) => {
+  const { string, character } = req.params;
+
+  if (typeof character !== 'string' || character.length !== 1) {
+    return res.status(400).json({ error: 'Parameter "character" must be a single character.' });
+  }
+
+  const startsWithCharacter = string.startsWith(character);
+
+  return res.status(200).json({ result: startsWithCharacter });
+});
+
+app.post('/arrays/element-at-index/:n', (req, res) => {
+  const n = parseInt(req.params.n);
+  const { array } = req.body;
+  const index = n % array.length;
+  const element = array[index];
+  return res.status(200).json({ result: element });
+});
+
+app.post('/arrays/to-string', (req, res) => {
+  const { array } = req.body;
+  const stringified = array.join(',');
+  return res.status(200).json({ result: stringified });
+});
+
+app.post('/arrays/append', (req, res) => {
+  const { array, value } = req.body;
+  array.push(value);
+  return res.status(200).json({ result: array });
+});
+
+app.post('/arrays/starts-with-vowel', (req, res) => {
+  const { array } = req.body;
+  const vowels = ['a', 'e', 'i', 'o', 'u'];
+
+  const filteredArray = array.filter(element => {
+    const firstChar = element.charAt(0).toLowerCase();
+    return vowels.includes(firstChar);
+  });
+
+  return res.status(200).json({ result: filteredArray });
+});
+
+app.post('/arrays/remove-element', (req, res) => {
+  const { array } = req.body;
+  const modifiedArray = removeNthElement(0, array);
+  return res.status(200).json({ result: modifiedArray });
+});
+
+app.post('/arrays/remove-element/index', (req, res) => {
+  const index = parseInt(req.query.index);
+  const { array } = req.body;
+  const modifiedArray = removeNthElement2(index, array);
+  return res.status(200).json({ result: modifiedArray });
 });
 
 module.exports = app;
